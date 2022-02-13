@@ -2,6 +2,8 @@ import './style.css'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import * as dat from 'lil-gui'
+import treeVertexShader from './shaders/tree/vertex.glsl'
+import treeFragmentShader from './shaders/tree/fragment.glsl'
 
 // Gui 
 const gui = new dat.GUI()
@@ -48,15 +50,27 @@ function rotateAboutPoint(obj, point, axis, theta, pointIsWorld){
 /////////////////////////////////////////
 const cylinerHeight = 0.5
 const geometry = new THREE.CylinderGeometry( 0.05, 0.1, cylinerHeight, 60, 20 );
-
-
+// // We can add our own attributes to the geometry and get them inside the 
+// // vertex shader that way; we have position, uv and normal by default 
+// const count = geometry.attributes.position.count // this is 3 x the number of vertices in the geometry 
+// const randoms = new Float32Array(count)
+// // We add one random value for each vertex
+// for (let i = 0; i < count; i++) {
+//     randoms[i] = Math.random()
+// }
+// // Provide that array into the attributes of the geometry so that we can 
+// // access them from the shader
+// geometry.setAttribute('aRandom', new THREE.BufferAttribute(randoms, 1))
 /////////////////////////////////////////
 /////////////// Material ////////////////
 /////////////////////////////////////////
-const material = new THREE.MeshBasicMaterial({
+const material = new THREE.ShaderMaterial({
     side: THREE.DoubleSide,
+    // wireframe: true,
     transparent: true,
-    opacity: 0.5
+    // opacity: 0.6,
+    vertexShader: treeVertexShader,
+    fragmentShader: treeFragmentShader
 })
 
 /////////////////////////////////////////
@@ -67,16 +81,29 @@ const material = new THREE.MeshBasicMaterial({
 
 // Many meshes 
 const groupCyliners = new THREE.Group();
-for (let i=-Math.PI/2; i < Math.PI/2; i+=0.03) {
+for (let i=-Math.PI/2; i < Math.PI/2; i+=0.05) {
     //const randomLength = Math.random()
     //const geometry = new THREE.CylinderGeometry( 0.1, 0.5, 1, 20, 20 );
     // Geometries - introduce randomness 
-    const cylinerHeight = Math.random()+0.5
+    const cylinerHeight = 0.5 //Math.random()+0.5
     const cylinerRadiusSmall = 0.005
     const cylinerRadiusLarge = 0.02
     const geometry = new THREE.CylinderGeometry(
         cylinerRadiusSmall, cylinerRadiusLarge, cylinerHeight, 60, 20 
         );
+    // We can add our own attributes to the geometry and get them inside the 
+    // vertex shader that way; we have position, uv and normal by default 
+    const count = geometry.attributes.position.count // this is 3 x the number of vertices in the geometry 
+    const randoms = new Float32Array(count)
+    // We add one random value for each vertex
+    for (let i = 0; i < count; i++) {
+        randoms[i] = Math.random()
+    }
+    // Provide that array into the attributes of the geometry so that we can 
+    // access them from the shader
+    geometry.setAttribute('aRandom', new THREE.BufferAttribute(randoms, 1))
+
+
 
     // Create the corresponding mesh
     const mesh = new THREE.Mesh(geometry, material)
@@ -94,14 +121,14 @@ for (let i=-Math.PI/2; i < Math.PI/2; i+=0.03) {
     rotateAboutPoint(
         mesh, 
         new THREE.Vector3(0, -halfCylinerLength, 0), 
-        new THREE.Vector3(0, 0.5-Math.random(), 1), 
-        //new THREE.Vector3(0, 0, 1), 
+        //new THREE.Vector3(0, 0.5-Math.random(), 1), 
+        new THREE.Vector3(0, 0, 1), 
         i
     )
 
     groupCyliners.add(mesh)   
 }
-groupCyliners.position.y += 0.3
+//groupCyliners.position.y += 0.3
 scene.add( groupCyliners );
 
 
