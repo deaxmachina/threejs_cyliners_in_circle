@@ -4,6 +4,8 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import * as dat from 'lil-gui'
 import branchesVertexShader from './shaders/branches/vertex.glsl'
 import branchesFragmentShader from './shaders/branches/fragment.glsl'
+import tinyBranchesVertexShader from './shaders/tinyBranches/vertex.glsl'
+import tinyBranchesFragmentShader from './shaders/tinyBranches/fragment.glsl'
 import trunkVertexShader from './shaders/trunk/vertex.glsl'
 import trunkFragmentShader from './shaders/trunk/fragment.glsl'
 
@@ -59,7 +61,7 @@ function rotateAboutPoint(obj, point, axis, theta, pointIsWorld){
 /////////////// Geometry ////////////////
 /////////////////////////////////////////
 // Geometry for the Trunk
-const trunkHeight = 3
+const trunkHeight = 5
 const geometryTrunk = new THREE.CylinderGeometry( 0.2, 0.6, trunkHeight, 60, 20 );
 // const count = geometryTrunk.attributes.position.count // this is the number of vertices in the geometry 
 // const randoms = new Float32Array(count)
@@ -86,7 +88,7 @@ const materialBranches = new THREE.ShaderMaterial({
     vertexShader: branchesVertexShader,
     fragmentShader: branchesFragmentShader,
     uniforms: {
-        uFrequency: { value: new THREE.Vector2(10, 5) },
+        uFrequency: { value: new THREE.Vector2(5, 5) },
         uTime: { value: 0 },
         uColor: { value: new THREE.Color('purple') } 
     }
@@ -94,6 +96,21 @@ const materialBranches = new THREE.ShaderMaterial({
 gui.add(materialBranches.uniforms.uFrequency.value, 'x').min(0).max(20).name('frequencyX')
 gui.add(materialBranches.uniforms.uFrequency.value, 'y').min(0).max(20).name('frequencyY')
 
+
+// Material for tiny Branches
+const materialTinyBranches = new THREE.ShaderMaterial({
+    side: THREE.DoubleSide,
+    // wireframe: true,
+    transparent: true,
+    // opacity: 0.6,
+    vertexShader: tinyBranchesVertexShader,
+    fragmentShader: tinyBranchesFragmentShader,
+    uniforms: {
+        uFrequency: { value: new THREE.Vector2(10, 5) },
+        uTime: { value: 0 },
+        uColor: { value: new THREE.Color('purple') } 
+    }
+})
 
 // Material for Trunk
 const materialTrunk = new THREE.ShaderMaterial({
@@ -121,19 +138,57 @@ gui.add(materialTrunk.uniforms.uFrequency.value, 'y').min(0).max(20).name('frequ
 // Mesh for the Trunk
 const meshTrunk = new THREE.Mesh(geometryTrunk, materialTrunk)
 meshTrunk.position.y -= 1.1;
-
 scene.add(meshTrunk)
+
+// // Some meshes for really thin branches
+// const tinyCyliners = new THREE.Group();
+// for (let i=-Math.PI*0.5; i < Math.PI*0.5; i+=0.05) {
+//     const cylinerHeight = Math.random()+2.7
+//     const cylinerRadiusSmall = 0.003
+//     const cylinerRadiusLarge = 0.005
+//     const geometry = new THREE.CylinderGeometry(
+//         cylinerRadiusSmall, cylinerRadiusLarge, cylinerHeight, 60, 60, 60
+//         );
+//     const count = geometry.attributes.position.count // this is the number of vertices in the geometry 
+//     const randoms = new Float32Array(count)
+//     for (let i = 0; i < count; i++) {
+//         randoms[i] = Math.random()
+//     }
+//     // Create the corresponding mesh
+//     const mesh = new THREE.Mesh(geometry, materialTinyBranches)
+//     // Make sure each cyliner starts at the center
+//     mesh.position.x = 0
+//     mesh.position.y = 0
+//     mesh.position.z = 0
+//     // To rotate around the end of the cyliner
+//     const halfCylinerLength = cylinerHeight * 0.5 
+//     rotateAboutPoint(
+//         mesh, 
+//         new THREE.Vector3(0, -halfCylinerLength, 0), 
+//         new THREE.Vector3(
+//             (0.5-Math.random())*2, 
+//             (0.5-Math.random())*2, 
+//             (0.5-Math.random())*2
+//             ), 
+//         //new THREE.Vector3(0, 0, 1), 
+//         i
+//     )
+
+//     tinyCyliners.add(mesh)   
+// }
+// tinyCyliners.position.y += 1.5
+// scene.add( tinyCyliners );
 
 
 // Many meshes for the Branches
 const groupCyliners = new THREE.Group();
-for (let i=-Math.PI*0.5; i < Math.PI*0.5; i+=0.01) {
+for (let i=-Math.PI*0.5; i < Math.PI*0.5; i+=0.005) {
     //const randomLength = Math.random()
     //const geometry = new THREE.CylinderGeometry( 0.1, 0.5, 1, 20, 20 );
     // Geometries - introduce randomness 
-    const cylinerHeight = Math.random()+2
-    const cylinerRadiusSmall = 0.01 * Math.random()
-    const cylinerRadiusLarge = 0.1 * Math.random()
+    const cylinerHeight = 5
+    const cylinerRadiusSmall = 0.002 * Math.random()
+    const cylinerRadiusLarge = 0.2 * Math.random()
     const geometry = new THREE.CylinderGeometry(
         cylinerRadiusSmall, cylinerRadiusLarge, cylinerHeight, 60, 60, 60
         );
@@ -160,25 +215,24 @@ for (let i=-Math.PI*0.5; i < Math.PI*0.5; i+=0.01) {
     mesh.position.z = 0
 
     // To rotate around the center
-    //mesh.rotation.z = i
-
+    // mesh.rotation.x = i
     // To rotate around the end of the cyliner
     const halfCylinerLength = cylinerHeight * 0.5 
     rotateAboutPoint(
         mesh, 
         new THREE.Vector3(0, -halfCylinerLength, 0), 
         new THREE.Vector3(
-            (0.5-Math.random())*1.5, 
-            (0.5-Math.random())*1.5, 
+            (0.5-Math.random())*2, 
+            (0.5-Math.random())*2, 
             (0.5-Math.random())*2
             ), 
-        //new THREE.Vector3(0, 0, 1), 
+        //new THREE.Vector3(1, 0, 1), 
         i
     )
 
     groupCyliners.add(mesh)   
 }
-groupCyliners.position.y += 1.5
+groupCyliners.position.y += 3.5
 scene.add( groupCyliners );
 
 
@@ -189,7 +243,7 @@ scene.add( groupCyliners );
 // Base camera
 const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height, 0.1, 100)
 //camera.position.set(0.25, - 0.25, 1)
-camera.position.set(0, - 0.25, 3.3)
+camera.position.set(0, -4, 2)
 scene.add(camera)
 
 /////////////////////////////////////////
@@ -205,6 +259,7 @@ const renderer = new THREE.WebGLRenderer({
     canvas: canvas
 })
 renderer.setSize(sizes.width, sizes.height)
+renderer.setClearColor('#040c25')
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 
 /////////////////////////////////////////
@@ -235,6 +290,7 @@ const tick = () =>
 
     // Update materials
     materialBranches.uniforms.uTime.value = elapsedTime
+    materialTinyBranches.uniforms.uTime.value = elapsedTime
     materialTrunk.uniforms.uTime.value = elapsedTime
 
     // Update controls

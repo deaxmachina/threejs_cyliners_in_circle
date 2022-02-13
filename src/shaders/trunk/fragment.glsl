@@ -23,8 +23,5 @@ void main () {
   // mixedColor *= mix(mixedColor, greenCol,  0.2);
   // gl_FragColor = vec4(mixedColor, 1.0);
 
-
-  gl_FragColor = vec4(vec3(strength), 1.0);
-  
-  //gl_FragColor = vec4(1.0);
+  gl_FragColor = vec4(1.0);
 }
