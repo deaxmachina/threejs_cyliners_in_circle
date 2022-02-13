@@ -2,8 +2,18 @@ import './style.css'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import * as dat from 'lil-gui'
-import treeVertexShader from './shaders/tree/vertex.glsl'
-import treeFragmentShader from './shaders/tree/fragment.glsl'
+import branchesVertexShader from './shaders/branches/vertex.glsl'
+import branchesFragmentShader from './shaders/branches/fragment.glsl'
+import trunkVertexShader from './shaders/trunk/vertex.glsl'
+import trunkFragmentShader from './shaders/trunk/fragment.glsl'
+
+
+// Values to play with:
+// const cylinerHeight = Math.random()+1.5  ---  1.5 is setting the min length of the branches
+// const cylinerRadiusSmall = 0.005  --- size of the radius of the end of the cylinders
+// const cylinerRadiusLarge = 0.03 * Math.random() --- size of the radius at the start of the cylinders
+// groupCyliners.position.y += 1  ---  how far up to move the whole tree; do we want to see the end of the branches or they extend all the way outside the screen
+// camera.position.set(0, - 0.25, 2.5)  --- this is combined with groupCyliners.position.y; how much of the tree should be in view, i.e. how much to zoom into the z direction
 
 // Gui 
 const gui = new dat.GUI()
@@ -48,11 +58,10 @@ function rotateAboutPoint(obj, point, axis, theta, pointIsWorld){
 /////////////////////////////////////////
 /////////////// Geometry ////////////////
 /////////////////////////////////////////
-const cylinerHeight = 0.5
-const geometry = new THREE.CylinderGeometry( 0.05, 0.1, cylinerHeight, 60, 20 );
-// // We can add our own attributes to the geometry and get them inside the 
-// // vertex shader that way; we have position, uv and normal by default 
-// const count = geometry.attributes.position.count // this is 3 x the number of vertices in the geometry 
+// Geometry for the Trunk
+const trunkHeight = 3
+const geometryTrunk = new THREE.CylinderGeometry( 0.15, 0.4, trunkHeight, 60, 20 );
+// const count = geometryTrunk.attributes.position.count // this is the number of vertices in the geometry 
 // const randoms = new Float32Array(count)
 // // We add one random value for each vertex
 // for (let i = 0; i < count; i++) {
@@ -60,40 +69,74 @@ const geometry = new THREE.CylinderGeometry( 0.05, 0.1, cylinerHeight, 60, 20 );
 // }
 // // Provide that array into the attributes of the geometry so that we can 
 // // access them from the shader
-// geometry.setAttribute('aRandom', new THREE.BufferAttribute(randoms, 1))
+// geometryTrunk.setAttribute('aRandom', new THREE.BufferAttribute(randoms, 1))
+
+
+
 /////////////////////////////////////////
-/////////////// Material ////////////////
+/////////////// Materials ///////////////
 /////////////////////////////////////////
-const material = new THREE.ShaderMaterial({
+
+// Material for Branches
+const materialBranches = new THREE.ShaderMaterial({
     side: THREE.DoubleSide,
     // wireframe: true,
     transparent: true,
     // opacity: 0.6,
-    vertexShader: treeVertexShader,
-    fragmentShader: treeFragmentShader
+    vertexShader: branchesVertexShader,
+    fragmentShader: branchesFragmentShader,
+    uniforms: {
+        uFrequency: { value: new THREE.Vector2(10, 5) },
+        uTime: { value: 0 }
+    }
 })
+gui.add(materialBranches.uniforms.uFrequency.value, 'x').min(0).max(20).name('frequencyX')
+gui.add(materialBranches.uniforms.uFrequency.value, 'y').min(0).max(20).name('frequencyY')
+
+// Material for Trunk
+const materialTrunk = new THREE.ShaderMaterial({
+    side: THREE.DoubleSide,
+    // wireframe: true,
+    transparent: true,
+    // opacity: 0.6,
+    vertexShader: trunkVertexShader,
+    fragmentShader: trunkFragmentShader,
+    uniforms: {
+        uFrequency: { value: new THREE.Vector2(10, 5) },
+        uTime: { value: 0 }
+    }
+})
+gui.add(materialTrunk.uniforms.uFrequency.value, 'x').min(0).max(20).name('frequencyX')
+gui.add(materialTrunk.uniforms.uFrequency.value, 'y').min(0).max(20).name('frequencyY')
+
+
 
 /////////////////////////////////////////
 ////////////////// Mesh //////////////////
 /////////////////////////////////////////
-// const mesh = new THREE.Mesh(geometry, material)
-// scene.add(mesh)
 
-// Many meshes 
+// Mesh for the Trunk
+const meshTrunk = new THREE.Mesh(geometryTrunk, materialTrunk)
+meshTrunk.position.y -= 1;
+
+scene.add(meshTrunk)
+
+
+// Many meshes for the Branches
 const groupCyliners = new THREE.Group();
-for (let i=-Math.PI/2; i < Math.PI/2; i+=0.05) {
+for (let i=-Math.PI*2/3; i < Math.PI*2/3; i+=0.03) {
     //const randomLength = Math.random()
     //const geometry = new THREE.CylinderGeometry( 0.1, 0.5, 1, 20, 20 );
     // Geometries - introduce randomness 
-    const cylinerHeight = 0.5 //Math.random()+0.5
-    const cylinerRadiusSmall = 0.005
-    const cylinerRadiusLarge = 0.02
+    const cylinerHeight = Math.random()+2
+    const cylinerRadiusSmall = 0.003 * Math.random()
+    const cylinerRadiusLarge = 0.04 * Math.random()
     const geometry = new THREE.CylinderGeometry(
         cylinerRadiusSmall, cylinerRadiusLarge, cylinerHeight, 60, 20 
         );
     // We can add our own attributes to the geometry and get them inside the 
     // vertex shader that way; we have position, uv and normal by default 
-    const count = geometry.attributes.position.count // this is 3 x the number of vertices in the geometry 
+    const count = geometry.attributes.position.count // this is the number of vertices in the geometry 
     const randoms = new Float32Array(count)
     // We add one random value for each vertex
     for (let i = 0; i < count; i++) {
@@ -106,7 +149,7 @@ for (let i=-Math.PI/2; i < Math.PI/2; i+=0.05) {
 
 
     // Create the corresponding mesh
-    const mesh = new THREE.Mesh(geometry, material)
+    const mesh = new THREE.Mesh(geometry, materialBranches)
 
     // Make sure each cyliner starts at the center
     mesh.position.x = 0
@@ -128,7 +171,7 @@ for (let i=-Math.PI/2; i < Math.PI/2; i+=0.05) {
 
     groupCyliners.add(mesh)   
 }
-//groupCyliners.position.y += 0.3
+groupCyliners.position.y += 1.5
 scene.add( groupCyliners );
 
 
@@ -139,7 +182,7 @@ scene.add( groupCyliners );
 // Base camera
 const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height, 0.1, 100)
 //camera.position.set(0.25, - 0.25, 1)
-camera.position.set(0, - 0.25, 1)
+camera.position.set(0, - 0.25, 2.5)
 scene.add(camera)
 
 /////////////////////////////////////////
@@ -182,6 +225,10 @@ const clock = new THREE.Clock()
 const tick = () =>
 {
     const elapsedTime = clock.getElapsedTime()
+
+    // Update materials
+    materialBranches.uniforms.uTime.value = elapsedTime
+    materialTrunk.uniforms.uTime.value = elapsedTime
 
     // Update controls
     controls.update()
