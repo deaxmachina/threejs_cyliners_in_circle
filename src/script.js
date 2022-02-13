@@ -60,7 +60,7 @@ function rotateAboutPoint(obj, point, axis, theta, pointIsWorld){
 /////////////////////////////////////////
 // Geometry for the Trunk
 const trunkHeight = 3
-const geometryTrunk = new THREE.CylinderGeometry( 0.15, 0.4, trunkHeight, 60, 20 );
+const geometryTrunk = new THREE.CylinderGeometry( 0.2, 0.6, trunkHeight, 60, 20 );
 // const count = geometryTrunk.attributes.position.count // this is the number of vertices in the geometry 
 // const randoms = new Float32Array(count)
 // // We add one random value for each vertex
@@ -87,11 +87,13 @@ const materialBranches = new THREE.ShaderMaterial({
     fragmentShader: branchesFragmentShader,
     uniforms: {
         uFrequency: { value: new THREE.Vector2(10, 5) },
-        uTime: { value: 0 }
+        uTime: { value: 0 },
+        uColor: { value: new THREE.Color('purple') } 
     }
 })
 gui.add(materialBranches.uniforms.uFrequency.value, 'x').min(0).max(20).name('frequencyX')
 gui.add(materialBranches.uniforms.uFrequency.value, 'y').min(0).max(20).name('frequencyY')
+
 
 // Material for Trunk
 const materialTrunk = new THREE.ShaderMaterial({
@@ -103,7 +105,8 @@ const materialTrunk = new THREE.ShaderMaterial({
     fragmentShader: trunkFragmentShader,
     uniforms: {
         uFrequency: { value: new THREE.Vector2(10, 5) },
-        uTime: { value: 0 }
+        uTime: { value: 0 },
+        uColor: { value: new THREE.Color('purple') } 
     }
 })
 gui.add(materialTrunk.uniforms.uFrequency.value, 'x').min(0).max(20).name('frequencyX')
@@ -117,22 +120,22 @@ gui.add(materialTrunk.uniforms.uFrequency.value, 'y').min(0).max(20).name('frequ
 
 // Mesh for the Trunk
 const meshTrunk = new THREE.Mesh(geometryTrunk, materialTrunk)
-meshTrunk.position.y -= 1;
+meshTrunk.position.y -= 1.1;
 
 scene.add(meshTrunk)
 
 
 // Many meshes for the Branches
 const groupCyliners = new THREE.Group();
-for (let i=-Math.PI*2/3; i < Math.PI*2/3; i+=0.03) {
+for (let i=-Math.PI*0.5; i < Math.PI*0.5; i+=0.01) {
     //const randomLength = Math.random()
     //const geometry = new THREE.CylinderGeometry( 0.1, 0.5, 1, 20, 20 );
     // Geometries - introduce randomness 
     const cylinerHeight = Math.random()+2
-    const cylinerRadiusSmall = 0.003 * Math.random()
-    const cylinerRadiusLarge = 0.04 * Math.random()
+    const cylinerRadiusSmall = 0.01 * Math.random()
+    const cylinerRadiusLarge = 0.1 * Math.random()
     const geometry = new THREE.CylinderGeometry(
-        cylinerRadiusSmall, cylinerRadiusLarge, cylinerHeight, 60, 20 
+        cylinerRadiusSmall, cylinerRadiusLarge, cylinerHeight, 60, 60, 60
         );
     // We can add our own attributes to the geometry and get them inside the 
     // vertex shader that way; we have position, uv and normal by default 
@@ -164,8 +167,12 @@ for (let i=-Math.PI*2/3; i < Math.PI*2/3; i+=0.03) {
     rotateAboutPoint(
         mesh, 
         new THREE.Vector3(0, -halfCylinerLength, 0), 
-        //new THREE.Vector3(0, 0.5-Math.random(), 1), 
-        new THREE.Vector3(0, 0, 1), 
+        new THREE.Vector3(
+            (0.5-Math.random())*1.5, 
+            (0.5-Math.random())*1.5, 
+            (0.5-Math.random())*2
+            ), 
+        //new THREE.Vector3(0, 0, 1), 
         i
     )
 
@@ -182,7 +189,7 @@ scene.add( groupCyliners );
 // Base camera
 const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height, 0.1, 100)
 //camera.position.set(0.25, - 0.25, 1)
-camera.position.set(0, - 0.25, 2.5)
+camera.position.set(0, - 0.25, 3.3)
 scene.add(camera)
 
 /////////////////////////////////////////
